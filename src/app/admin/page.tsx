@@ -5,9 +5,6 @@ import { supabase } from "@/lib/supabaseClient";
 import AuthGuard from "@/components/AuthGuard";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 import { saveAs } from "file-saver";
 
 interface Payment {
@@ -21,24 +18,7 @@ interface Payment {
     created_at: string;
 }
 
-export async function middleware(req: NextRequest) {
-    const res = NextResponse.next();
-    const supabase = createMiddlewareClient({ req, res });
 
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-        return NextResponse.redirect(new URL("/login", req.url));
-    }
-
-    return res;
-}
-
-export const config = {
-    matcher: ["/dashboard/:path*", "/admin/:path*"],
-};
 const SHAREHOLDER_EMAILS = [
     // Put all shareholder emails here:
     "ashrafanam318@gmail.com",
@@ -78,7 +58,7 @@ export default function AdminPage() {
                 return;
             }
 
-            fetchPayments();
+            await fetchPayments();
         };
 
         const fetchPayments = async () => {
