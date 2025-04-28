@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
-import { Textarea } from "@/components/ui/textarea";
 
 export default function PaymentPage() {
     const [formData, setFormData] = useState({
@@ -32,7 +31,7 @@ export default function PaymentPage() {
 
         try {
             // Insert into Supabase
-            const { data, error } = await supabase.from("payments").insert([
+            const {error } = await supabase.from("payments").insert([
                 {
                     email: formData.email,
                     shareholder_name: formData.shareholderName,

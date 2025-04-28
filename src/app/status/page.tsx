@@ -47,9 +47,8 @@ export default function StatusPage() {
     }
 
     // Find users who have paid
-    const paidUserIds = payments.map((p) => p.user_id);
-
-    // Find unpaid shareholders
+    payments.map((p) => p.user_id);
+// Find unpaid shareholders
     const unpaidShareholders = ALL_SHAREHOLDERS.filter(
         (email) => !payments.some((p) => p.user_id === email)
     );

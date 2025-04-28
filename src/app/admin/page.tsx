@@ -39,12 +39,6 @@ export async function middleware(req: NextRequest) {
 export const config = {
     matcher: ["/dashboard/:path*", "/admin/:path*"],
 };
-
-const ADMIN_EMAILS = [
-    "sakifyeaser75@gmail.com",
-    "yeaser.sakif@gmail.com",
-];
-
 const SHAREHOLDER_EMAILS = [
     // Put all shareholder emails here:
     "ashrafanam318@gmail.com",
@@ -69,7 +63,7 @@ export default function AdminPage() {
     const router = useRouter();
     const [payments, setPayments] = useState<Payment[]>([]);
     const [loading, setLoading] = useState(true);
-    const [userEmail, setUserEmail] = useState<string | null>(null);
+    const [, setUserEmail] = useState<string | null>(null);
 
     useEffect(() => {
         const checkAdmin = async () => {
@@ -93,6 +87,7 @@ export default function AdminPage() {
             if (error) {
                 console.error(error);
             } else {
+                setPayments(data as Payment[]);
                 setPayments(data as Payment[]);
             }
 
