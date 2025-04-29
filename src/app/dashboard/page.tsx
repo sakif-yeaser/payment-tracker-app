@@ -1,36 +1,14 @@
 "use client";
 
-import { supabase } from "@/lib/supabaseClient";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export default function DashboardPage() {
-    const router = useRouter();
 
-    const handleLogout = async () => {
-        await supabase.auth.signOut();
-        router.push("/login");
-    };
 
     return (
         <div className="min-h-screen bg-gray-100">
             {/* Top Navbar */}
-            <nav className="bg-white shadow">
-                <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-                    <div className="flex items-center gap-6">
-                        <Link href="/dashboard" className="text-xl font-bold text-gray-800">
-                            🏡 Dashboard
-                        </Link>
-                        <Link href="/payment" className="text-gray-600 hover:text-black">
-                            Payment
-                        </Link>
-                    </div>
-                    <Button variant="outline" onClick={handleLogout}>
-                        Logout
-                    </Button>
-                </div>
-            </nav>
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto py-10 px-4">
