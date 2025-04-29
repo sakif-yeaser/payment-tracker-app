@@ -2,86 +2,95 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import AuthGuard from "@/components/AuthGuard";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
-interface Payment {
-    id: string;
-    user_id: string;
-    installment_month: string;
-    bank_name: string;
-    installment_amount: number;
-    transaction_date: string;
-    reference_number: string;
-    created_at: string;
-}
+/*interface PaymentRecord {
+    id: number;
+    email: string;
+    shareholder_name: string;
+    month: string;
+    year: string;
+    amount: number;
+}*/
 
-const ALL_SHAREHOLDERS = [
-    "sakifyeaser75@gmail.com",
-    "yeaser.sakif@gmail.com",
-    "umarnasib13@gmail.com",
-    // Add more shareholder emails here
-];
-
-export default function StatusPage() {
-    const [payments, setPayments] = useState<Payment[]>([]);
+export default function PaymentStatusPage() {
+    const [paidShareholders, setPaidShareholders] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const shareholders = [
+        "Shakil Ashraful Anam",
+        "Sakif Yeaser",
+        "Abdullah Umar Nasib",
+        "Nurul Hoque Shohel",
+        "MD Mazidul Hasan & Shahena Akther",
+        "Syed Nazmus Shakib",
+        "Imran Hossain",
+        "Fahim Hasnat",
+        "Imam Hossain & Imam Mehedi",
+        "Md. Shajjad Howlader",
+        "Sejan Mahmud",
+        "Mahfuzur Rahman",
+        "Ashiqur Rahman Mahmud",
+    ];
+
+    const currentMonth = new Date().toLocaleString("default", { month: "long" });
+    const currentYear = new Date().getFullYear().toString();
+
     useEffect(() => {
-        const fetchPayments = async () => {
-            const { data, error } = await supabase.from("payments").select("*");
+        const fetchPaidShareholders = async () => {
+            const { data, error } = await supabase
+                .from("payments")
+                .select<"shareholder_name">("shareholder_name")
+                .eq("month", currentMonth)
+                .eq("year", currentYear);
 
             if (error) {
-                console.error(error);
-            } else {
-                setPayments(data as Payment[]);
+                console.error("Error fetching payment data:", error.message);
+            } else if (data) {
+                const paidNames = data.map((record) => record.shareholder_name);
+                setPaidShareholders(paidNames);
             }
-
             setLoading(false);
         };
 
-        fetchPayments();
-    }, []);
+        fetchPaidShareholders();
+    }, [currentMonth, currentYear]);
 
     if (loading) {
-        return <div>Loading...</div>;
+        return <div className="p-6">Loading...</div>;
     }
 
-    // Find users who have paid
-    payments.map((p) => p.user_id);
-// Find unpaid shareholders
-    const unpaidShareholders = ALL_SHAREHOLDERS.filter(
-        (email) => !payments.some((p) => p.user_id === email)
-    );
-
     return (
-        <AuthGuard>
-            <div className="max-w-4xl p-8 mx-auto mt-10 bg-white border rounded shadow space-y-8">
-                <h1 className="text-3xl font-bold text-center">Payment Status</h1>
-
-                <div>
-                    <h2 className="text-xl font-semibold mb-4">✅ Paid Shareholders:</h2>
-                    <ul className="space-y-2 list-disc list-inside">
-                        {payments.map((payment) => (
-                            <li key={payment.id}>
-                                <div>
-                                    <strong>Reference No:</strong> {payment.reference_number} |{" "}
-                                    <strong>Month:</strong> {payment.installment_month} |{" "}
-                                    <strong>Amount:</strong> {payment.installment_amount} BDT
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-
-                <div className="pt-8 border-t">
-                    <h2 className="text-xl font-semibold mb-4">🚫 Unpaid Shareholders:</h2>
-                    <ul className="space-y-2 list-disc list-inside">
-                        {unpaidShareholders.map((email, idx) => (
-                            <li key={idx}>{email}</li>
-                        ))}
-                    </ul>
-                </div>
+        <div className="p-6">
+            <h1 className="text-2xl font-bold mb-6">Payment Status</h1>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {shareholders.map((name) => (
+                    <Card
+                        key={name}
+                        className={cn(
+                            "border-2",
+                            paidShareholders.includes(name)
+                                ? "border-green-500"
+                                : "border-red-500 bg-red-100"
+                        )}
+                    >
+                        <CardContent className="p-4">
+                            <p className="text-lg">{name}</p>
+                            <p
+                                className={cn(
+                                    "text-sm font-semibold",
+                                    paidShareholders.includes(name)
+                                        ? "text-green-700"
+                                        : "text-red-700"
+                                )}
+                            >
+                                {paidShareholders.includes(name) ? "Paid" : "Pending"}
+                            </p>
+                        </CardContent>
+                    </Card>
+                ))}
             </div>
-        </AuthGuard>
+        </div>
     );
 }

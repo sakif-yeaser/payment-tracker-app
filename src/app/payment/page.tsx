@@ -1,10 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
+import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+];
 
 const shareholders = [
     "Shakil Ashraful Anam",
@@ -19,15 +25,10 @@ const shareholders = [
     "Md. Shajjad Howlader",
     "Sejan Mahmud",
     "Mahfuzur Rahman",
-    "Ashiqur Rahman Mahmud",
+    "Ashiqur Rahman Mahmud"
 ];
 
-const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-];
-
-const years = [2024, 2025, 2026, 2027];
+const amounts = ["6500", "13000"];
 
 export default function PaymentForm() {
     const [formData, setFormData] = useState({
@@ -41,59 +42,98 @@ export default function PaymentForm() {
         referenceNumber: "",
     });
 
-    const handleChange = (field: string, value: string) => {
-        setFormData((prev) => ({ ...prev, [field]: value }));
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value,
+        }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log(formData);
 
-        // TODO: Save to Supabase and send emails
+        try {
+            const { data, error } = await supabase.from('payments').insert([
+                {
+                    email: formData.email,
+                    shareholder_name: formData.shareholderName,
+                    month: formData.month,
+                    year: formData.year,
+                    bank_name: formData.bankName,
+                    amount: parseInt(formData.amount),
+                    transaction_date: formData.transactionDate,
+                    reference_number: formData.referenceNumber,
+                }
+            ]);
+
+            if (error) {
+                console.error('Error submitting payment:', error.message);
+                alert('Failed to submit. Please try again.');
+            } else {
+                console.log('Payment submitted successfully:', data);
+                alert('Payment submitted successfully!');
+                setFormData({
+                    email: "",
+                    shareholderName: "",
+                    month: "",
+                    year: "",
+                    bankName: "",
+                    amount: "",
+                    transactionDate: "",
+                    referenceNumber: "",
+                });
+            }
+
+        } catch (error: any) {
+            console.error('Unexpected error:', error.message);
+            alert('Something went wrong!');
+        }
     };
 
     return (
-        <div className="max-w-2xl mx-auto py-10">
-            <h1 className="text-2xl font-bold mb-6 text-center">Payment Submission</h1>
+        <div className="max-w-2xl mx-auto p-4">
+            <h1 className="text-2xl font-bold mb-4 text-center">Submit Payment Information</h1>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Email */}
-                <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+            <form onSubmit={handleSubmit} className="grid gap-4">
+                <div>
+                    <Label>Email</Label>
                     <Input
-                        id="email"
                         type="email"
-                        placeholder="your-email@example.com"
+                        name="email"
                         value={formData.email}
-                        onChange={(e) => handleChange("email", e.target.value)}
+                        onChange={handleChange}
                         required
                     />
                 </div>
 
-                {/* Shareholder Name */}
-                <div className="space-y-2">
-                    <Label htmlFor="shareholderName">Shareholder Name</Label>
-                    <Select onValueChange={(value) => handleChange("shareholderName", value)} required>
-                        <SelectTrigger id="shareholderName">
+                <div>
+                    <Label>Shareholder Name</Label>
+                    <Select
+                        value={formData.shareholderName}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, shareholderName: value }))}
+                    >
+                        <SelectTrigger>
                             <SelectValue placeholder="Select Shareholder" />
                         </SelectTrigger>
                         <SelectContent>
-                            {shareholders.map((name) => (
-                                <SelectItem key={name} value={name}>
-                                    {name}
+                            {shareholders.map((shareholder) => (
+                                <SelectItem key={shareholder} value={shareholder}>
+                                    {shareholder}
                                 </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
                 </div>
 
-                {/* Month and Year */}
-                <div className="flex space-x-4">
-                    {/* Month */}
-                    <div className="w-1/2 space-y-2">
-                        <Label htmlFor="month">Month</Label>
-                        <Select onValueChange={(value) => handleChange("month", value)} required>
-                            <SelectTrigger id="month">
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <Label>Month</Label>
+                        <Select
+                            value={formData.month}
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, month: value }))}
+                        >
+                            <SelectTrigger>
                                 <SelectValue placeholder="Select Month" />
                             </SelectTrigger>
                             <SelectContent>
@@ -106,76 +146,72 @@ export default function PaymentForm() {
                         </Select>
                     </div>
 
-                    {/* Year */}
-                    <div className="w-1/2 space-y-2">
-                        <Label htmlFor="year">Year</Label>
-                        <Select onValueChange={(value) => handleChange("year", value)} required>
-                            <SelectTrigger id="year">
-                                <SelectValue placeholder="Select Year" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {years.map((year) => (
-                                    <SelectItem key={year} value={year.toString()}>
-                                        {year}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                    <div>
+                        <Label>Year</Label>
+                        <Input
+                            type="text"
+                            name="year"
+                            value={formData.year}
+                            onChange={handleChange}
+                            placeholder="e.g. 2025"
+                            required
+                        />
                     </div>
                 </div>
 
-                {/* Bank Name */}
-                <div className="space-y-2">
-                    <Label htmlFor="bankName">Bank Name</Label>
+                <div>
+                    <Label>Bank Name</Label>
                     <Input
-                        id="bankName"
-                        placeholder="Enter Bank Name"
+                        type="text"
+                        name="bankName"
                         value={formData.bankName}
-                        onChange={(e) => handleChange("bankName", e.target.value)}
+                        onChange={handleChange}
                         required
                     />
                 </div>
 
-                {/* Installment Amount */}
-                <div className="space-y-2">
-                    <Label htmlFor="amount">Installment Amount</Label>
-                    <Select onValueChange={(value) => handleChange("amount", value)} required>
-                        <SelectTrigger id="amount">
+                <div>
+                    <Label>Installment Amount</Label>
+                    <Select
+                        value={formData.amount}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, amount: value }))}
+                    >
+                        <SelectTrigger>
                             <SelectValue placeholder="Select Amount" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="6500">6,500</SelectItem>
-                            <SelectItem value="13000">13,000</SelectItem>
+                            {amounts.map((amount) => (
+                                <SelectItem key={amount} value={amount}>
+                                    {amount}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>
 
-                {/* Transaction Date */}
-                <div className="space-y-2">
-                    <Label htmlFor="transactionDate">Transaction Date</Label>
+                <div>
+                    <Label>Transaction Date</Label>
                     <Input
-                        id="transactionDate"
                         type="date"
+                        name="transactionDate"
                         value={formData.transactionDate}
-                        onChange={(e) => handleChange("transactionDate", e.target.value)}
+                        onChange={handleChange}
                         required
                     />
                 </div>
 
-                {/* Reference Number */}
-                <div className="space-y-2">
-                    <Label htmlFor="referenceNumber">Reference Number</Label>
+                <div>
+                    <Label>Reference Number</Label>
                     <Input
-                        id="referenceNumber"
-                        placeholder="Enter Reference Number"
+                        type="text"
+                        name="referenceNumber"
                         value={formData.referenceNumber}
-                        onChange={(e) => handleChange("referenceNumber", e.target.value)}
+                        onChange={handleChange}
                         required
                     />
                 </div>
 
-                {/* Submit Button */}
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="mt-4 w-full">
                     Submit Payment
                 </Button>
             </form>
