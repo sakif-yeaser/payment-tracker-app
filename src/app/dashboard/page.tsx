@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { differenceInCalendarDays, format, isAfter, parseISO } from "date-fns";
+import { differenceInCalendarDays, isAfter, parseISO } from "date-fns";
 
 const shareholders = [
     "Shakil Ashraful Anam",
