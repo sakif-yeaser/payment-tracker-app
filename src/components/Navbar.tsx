@@ -10,12 +10,18 @@ import { Menu, X } from "lucide-react";
 export default function Navbar() {
     const pathname = usePathname();
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
 
     useEffect(() => {
         const checkAuth = async () => {
             const { data } = await supabase.auth.getSession();
-            setIsLoggedIn(!!data.session);
+            const session = data.session;
+            setIsLoggedIn(!!session);
+
+            if (session?.user?.email === "sakif@example.com") {
+                setIsAdmin(true);
+            }
         };
         checkAuth();
     }, []);
@@ -25,60 +31,50 @@ export default function Navbar() {
         window.location.href = "/login";
     };
 
+    const NavLink = ({
+                         href,
+                         label,
+                     }: {
+        href: string;
+        label: string;
+    }) => (
+        <Link
+            href={href}
+            className={cn(
+                "text-gray-600 hover:text-gray-900 font-medium transition",
+                pathname === href && "text-blue-600 font-semibold"
+            )}
+        >
+            {label}
+        </Link>
+    );
+
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md">
             <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-                {/* Logo */}
-                <div className="text-xl font-bold text-gray-800">
-                    Payment Tracker
-                </div>
+                <div className="text-xl font-bold text-gray-800">Payment Tracker</div>
 
                 {/* Desktop Menu */}
                 <div className="hidden md:flex items-center gap-6">
-                    {/* Always show Home */}
-
-                    {/* Show these links only if logged in */}
                     {isLoggedIn && (
                         <>
-                            <Link
-                                href="/dashboard"
-                                className={cn(
-                                    "text-gray-600 hover:text-gray-900 font-medium transition",
-                                    pathname === "/dashboard" && "text-blue-600 font-semibold"
-                                )}
-                            >
-                                Dashboard
-                            </Link>
-                            <Link
-                                href="/payment"
-                                className={cn(
-                                    "text-gray-600 hover:text-gray-900 font-medium transition",
-                                    pathname === "/payment" && "text-blue-600 font-semibold"
-                                )}
-                            >
-                                Submit Payment
-                            </Link>
+                            <NavLink href="/dashboard" label="Dashboard" />
+                            <NavLink href="/payment" label="Submit Payment" />
+                            <NavLink href="/status" label="Payment Status" />
 
-                            <Link
-                                href="/status"
-                                className={cn(
-                                    "text-gray-600 hover:text-gray-900 font-medium transition",
-                                    pathname === "/status" && "text-blue-600 font-semibold"
-                                )}
+                            {isAdmin && (
+                                <>
+                                    <NavLink href="/admin" label="Admin Panel" />
+                                    <NavLink href="/admin/reminder" label="Send Reminder" />
+                                </>
+                            )}
+                            <button
+                                onClick={handleLogout}
+                                className="ml-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition"
                             >
-                                Payment Status
-                            </Link>
+                                Logout
+                            </button>
                         </>
-                    )}
-
-                    {/* Logout button */}
-                    {isLoggedIn && (
-                        <button
-                            onClick={handleLogout}
-                            className="ml-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition"
-                        >
-                            Logout
-                        </button>
                     )}
                 </div>
 
@@ -93,21 +89,30 @@ export default function Navbar() {
             {/* Mobile Menu */}
             {menuOpen && (
                 <div className="md:hidden bg-white shadow-md flex flex-col gap-4 px-6 pb-6">
-                    {/* Always show Home */}
                     <Link
                         href="/"
                         onClick={() => setMenuOpen(false)}
                         className={cn(
                             "block text-gray-600 hover:text-gray-900 font-medium transition",
-                            pathname === "/dashboard" && "text-blue-600 font-semibold"
+                            pathname === "/" && "text-blue-600 font-semibold"
                         )}
                     >
                         Home
                     </Link>
 
-                    {/* Show these links only if logged in */}
                     {isLoggedIn && (
                         <>
+                            <Link
+                                href="/dashboard"
+                                onClick={() => setMenuOpen(false)}
+                                className={cn(
+                                    "block text-gray-600 hover:text-gray-900 font-medium transition",
+                                    pathname === "/dashboard" && "text-blue-600 font-semibold"
+                                )}
+                            >
+                                Dashboard
+                            </Link>
+
                             <Link
                                 href="/payment"
                                 onClick={() => setMenuOpen(false)}
@@ -129,6 +134,31 @@ export default function Navbar() {
                             >
                                 Payment Status
                             </Link>
+
+                            {isAdmin && (
+                                <>
+                                    <Link
+                                        href="/admin"
+                                        onClick={() => setMenuOpen(false)}
+                                        className={cn(
+                                            "block text-gray-600 hover:text-gray-900 font-medium transition",
+                                            pathname === "/admin" && "text-blue-600 font-semibold"
+                                        )}
+                                    >
+                                        Admin Panel
+                                    </Link>
+                                    <Link
+                                        href="/admin/reminder"
+                                        onClick={() => setMenuOpen(false)}
+                                        className={cn(
+                                            "block text-gray-600 hover:text-gray-900 font-medium transition",
+                                            pathname === "/admin/reminder" && "text-blue-600 font-semibold"
+                                        )}
+                                    >
+                                        Send Reminder
+                                    </Link>
+                                </>
+                            )}
 
                             <button
                                 onClick={() => {
