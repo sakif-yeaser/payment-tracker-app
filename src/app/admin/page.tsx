@@ -52,7 +52,7 @@ export default function AdminPage() {
             console.log("user info",data)
             setUserEmail(email);
 
-            if (!email || 'test@test.com' !== email) {
+            if (!email || 'adtl.management@gmail.com' !== email) {
                 alert("Access denied. Only admins can view this page.");
                 router.push("/login");
                 return;
