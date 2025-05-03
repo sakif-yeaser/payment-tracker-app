@@ -94,16 +94,6 @@ export default function Navbar() {
             {/* Mobile Menu */}
             {menuOpen && (
                 <div className="md:hidden bg-white shadow-md flex flex-col gap-4 px-6 pb-6">
-                    <Link
-                        href="/"
-                        onClick={() => setMenuOpen(false)}
-                        className={cn(
-                            "block text-gray-600 hover:text-gray-900 font-medium transition",
-                            pathname === "/" && "text-blue-600 font-semibold"
-                        )}
-                    >
-                        Home
-                    </Link>
 
                     {isLoggedIn && (
                         <>
