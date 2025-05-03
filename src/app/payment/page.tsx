@@ -248,8 +248,7 @@ export default function PaymentForm() {
 
                 <div>
                     <Label>Attachment (Image or PDF)</Label>
-                    <Input type="file" accept="image/*,application/pdf" onChange={handleFileChange} />
-                    required
+                    <Input type="file" accept="image/*,application/pdf" onChange={handleFileChange} required />
                 </div>
 
                 <Button type="submit" className="mt-4 w-full">
