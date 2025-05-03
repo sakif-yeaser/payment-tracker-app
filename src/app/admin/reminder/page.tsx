@@ -31,13 +31,13 @@ export default function ReminderPage() {
         for (const person of shareholders) {
             try {
                 await emailjs.send(
-                    process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
-                    process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
+                    'service_22jj677',
+                    'adtl_template',
                     {
                         to_name: person.name,
                         to_email: person.email,
                     },
-                    process.env.NEXT_PUBLIC_EMAILJS_USER_ID!
+                    'NDYX-j3YagH5ASSl8'
                 );
                 console.log("Sent to", person.name);
             } catch (error) {

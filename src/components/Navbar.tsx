@@ -14,16 +14,21 @@ export default function Navbar() {
     const [menuOpen, setMenuOpen] = useState(false);
 
     useEffect(() => {
-        const checkAuth = async () => {
-            const { data } = await supabase.auth.getSession();
+        const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+            setIsLoggedIn(!!session);
+            setIsAdmin(session?.user?.email === "adtl.management@gmail.com");
+        });
+
+        // Initial check on mount
+        supabase.auth.getSession().then(({ data }) => {
             const session = data.session;
             setIsLoggedIn(!!session);
+            setIsAdmin(session?.user?.email === "adtl.management@gmail.com");
+        });
 
-            if (session?.user?.email === "sakif@example.com") {
-                setIsAdmin(true);
-            }
+        return () => {
+            listener.subscription.unsubscribe();
         };
-        checkAuth();
     }, []);
 
     const handleLogout = async () => {
