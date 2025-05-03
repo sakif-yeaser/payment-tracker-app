@@ -9,10 +9,12 @@ import { saveAs } from "file-saver";
 
 interface Payment {
     id: string;
-    user_id: string;
-    installment_month: string;
+    shareholder_name: string;
+    email: string;
+    year: string;
+    month: string;
     bank_name: string;
-    installment_amount: number;
+    amount: number;
     transaction_date: string;
     reference_number: string;
     created_at: string;
@@ -68,7 +70,7 @@ export default function AdminPage() {
                 console.error(error);
             } else {
                 setPayments(data as Payment[]);
-                setPayments(data as Payment[]);
+ //               setPayments(data as Payment[]);
             }
 
             setLoading(false);
@@ -79,8 +81,10 @@ export default function AdminPage() {
 
     const downloadCSV = () => {
         const headers = [
+            "Shareholder Name",
             "Shareholder Email",
             "Installment Month",
+            "Installment Year",
             "Bank Name",
             "Amount (BDT)",
             "Transaction Date",
@@ -89,10 +93,12 @@ export default function AdminPage() {
         ];
 
         const rows = payments.map((payment) => [
-            payment.user_id,
-            payment.installment_month,
+            payment.shareholder_name,
+            payment.email,
+            payment.month,
+            payment.year,
             payment.bank_name,
-            payment.installment_amount,
+            payment.amount,
             payment.transaction_date,
             payment.reference_number,
             new Date(payment.created_at).toLocaleString(),
@@ -107,8 +113,8 @@ export default function AdminPage() {
     };
 
     const totalShareholders = SHAREHOLDER_EMAILS.length;
-    const paidShareholders = new Set(payments.map((p) => p.user_id)).size;
-    const totalAmountCollected = payments.reduce((sum, p) => sum + p.installment_amount, 0);
+    const paidShareholders = new Set(payments.map((p) => p.id)).size;
+    const totalAmountCollected = payments.reduce((sum, p) => sum + p.amount, 0);
     const pendingShareholders = totalShareholders - paidShareholders;
     const paymentRate = ((paidShareholders / totalShareholders) * 100).toFixed(2);
 
@@ -154,6 +160,7 @@ export default function AdminPage() {
                     <tr className="bg-gray-100">
                         <th className="border p-2">Shareholder Email</th>
                         <th className="border p-2">Installment Month</th>
+                        <th className="border p-2">Installment Year</th>
                         <th className="border p-2">Bank Name</th>
                         <th className="border p-2">Amount</th>
                         <th className="border p-2">Transaction Date</th>
@@ -164,10 +171,11 @@ export default function AdminPage() {
                     <tbody>
                     {payments.map((payment) => (
                         <tr key={payment.id} className="odd:bg-white even:bg-gray-50">
-                            <td className="border p-2">{payment.user_id}</td>
-                            <td className="border p-2">{payment.installment_month}</td>
+                            <td className="border p-2">{payment.email}</td>
+                            <td className="border p-2">{payment.month}</td>
+                            <td className="border p-2">{payment.year}</td>
                             <td className="border p-2">{payment.bank_name}</td>
-                            <td className="border p-2">{payment.installment_amount} BDT</td>
+                            <td className="border p-2">{payment.amount} BDT</td>
                             <td className="border p-2">{payment.transaction_date}</td>
                             <td className="border p-2">{payment.reference_number}</td>
                             <td className="border p-2">{new Date(payment.created_at).toLocaleString()}</td>
