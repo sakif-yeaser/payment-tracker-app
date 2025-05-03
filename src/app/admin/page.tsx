@@ -241,8 +241,8 @@ export default function AdminPage() {
 
                 {/* Back Button */}
                 <div className="flex justify-center mt-8">
-                    <Button variant="outline" onClick={() => router.push("/")}>
-                        Back to Home
+                    <Button variant="outline" onClick={() => router.push("/dashboard")}>
+                        Back to Dashboard
                     </Button>
                 </div>
             </div>
