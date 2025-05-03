@@ -42,6 +42,8 @@ export default function PaymentForm() {
         referenceNumber: "",
     });
 
+    const [file, setFile] = useState<File | null>(null);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -50,11 +52,42 @@ export default function PaymentForm() {
         }));
     };
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const uploadedFile = e.target.files?.[0];
+        if (uploadedFile) {
+            setFile(uploadedFile);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        let fileUrl = "";
+
+        if (file) {
+            const fileExt = file.name.split('.').pop();
+            const filePath = `proofs/${Date.now()}-${formData.referenceNumber}.${fileExt}`;
+
+            const {error: uploadError } = await supabase.storage
+                .from("payment-proofs")
+                .upload(filePath, file);
+
+            if (uploadError) {
+                console.error("File upload failed:", uploadError.message);
+                alert("Failed to upload file. Please try again.");
+                return;
+            }
+
+            const { data: publicUrlData } = supabase
+                .storage
+                .from("payment-proofs")
+                .getPublicUrl(filePath);
+
+            fileUrl = publicUrlData.publicUrl;
+        }
+
         try {
-            const { data, error } = await supabase.from('payments').insert([
+            const {error } = await supabase.from('payments').insert([
                 {
                     email: formData.email,
                     shareholder_name: formData.shareholderName,
@@ -64,6 +97,7 @@ export default function PaymentForm() {
                     amount: parseInt(formData.amount),
                     transaction_date: formData.transactionDate,
                     reference_number: formData.referenceNumber,
+                    proof_url: fileUrl,
                 }
             ]);
 
@@ -71,7 +105,6 @@ export default function PaymentForm() {
                 console.error('Error submitting payment:', error.message);
                 alert('Failed to submit. Please try again.');
             } else {
-                console.log('Payment submitted successfully:', data);
                 alert('Payment submitted successfully!');
                 setFormData({
                     email: "",
@@ -83,6 +116,7 @@ export default function PaymentForm() {
                     transactionDate: "",
                     referenceNumber: "",
                 });
+                setFile(null);
             }
 
         } catch (error: unknown) {
@@ -210,6 +244,11 @@ export default function PaymentForm() {
                         onChange={handleChange}
                         required
                     />
+                </div>
+
+                <div>
+                    <Label>Attachment (Image or PDF)</Label>
+                    <Input type="file" accept="image/*,application/pdf" onChange={handleFileChange} />
                 </div>
 
                 <Button type="submit" className="mt-4 w-full">

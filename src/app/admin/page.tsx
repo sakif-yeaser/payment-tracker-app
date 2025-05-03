@@ -6,6 +6,8 @@ import AuthGuard from "@/components/AuthGuard";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { saveAs } from "file-saver";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 interface Payment {
     id: string;
@@ -18,11 +20,10 @@ interface Payment {
     transaction_date: string;
     reference_number: string;
     created_at: string;
+    proof_url?: string; // proof attachment
 }
 
-
 const SHAREHOLDER_EMAILS = [
-    // Put all shareholder emails here:
     "ashrafanam318@gmail.com",
     "yeaser.sakif@gmail.com",
     "umarnasib13@gmail.com",
@@ -38,20 +39,22 @@ const SHAREHOLDER_EMAILS = [
     "mrasif30@gmail.com",
     "dr.ashique1985@gmail.com",
     "imammehedibappy@gmail.com"
-    // Add more if needed
 ];
 
 export default function AdminPage() {
     const router = useRouter();
     const [payments, setPayments] = useState<Payment[]>([]);
+    const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
     const [loading, setLoading] = useState(true);
     const [, setUserEmail] = useState<string | null>(null);
+    const [searchEmail, setSearchEmail] = useState("");
+    const [searchMonth, setSearchMonth] = useState("");
+    const [searchYear, setSearchYear] = useState("");
 
     useEffect(() => {
         const checkAdmin = async () => {
             const { data } = await supabase.auth.getUser();
             const email = data.user?.email ?? null;
-            console.log("user info",data)
             setUserEmail(email);
 
             if (!email || 'adtl.management@gmail.com' !== email) {
@@ -70,7 +73,7 @@ export default function AdminPage() {
                 console.error(error);
             } else {
                 setPayments(data as Payment[]);
- //               setPayments(data as Payment[]);
+                setFilteredPayments(data as Payment[]);
             }
 
             setLoading(false);
@@ -78,6 +81,15 @@ export default function AdminPage() {
 
         checkAdmin();
     }, [router]);
+
+    const handleFilter = () => {
+        const filtered = payments.filter((p) =>
+            p.email.toLowerCase().includes(searchEmail.toLowerCase()) &&
+            p.month.toLowerCase().includes(searchMonth.toLowerCase()) &&
+            p.year.includes(searchYear)
+        );
+        setFilteredPayments(filtered);
+    };
 
     const downloadCSV = () => {
         const headers = [
@@ -92,7 +104,7 @@ export default function AdminPage() {
             "Submitted At",
         ];
 
-        const rows = payments.map((payment) => [
+        const rows = filteredPayments.map((payment) => [
             payment.shareholder_name,
             payment.email,
             payment.month,
@@ -113,7 +125,7 @@ export default function AdminPage() {
     };
 
     const totalShareholders = SHAREHOLDER_EMAILS.length;
-    const paidShareholders = new Set(payments.map((p) => p.id)).size;
+    const paidShareholders = new Set(payments.map((p) => p.email)).size;
     const totalAmountCollected = payments.reduce((sum, p) => sum + p.amount, 0);
     const pendingShareholders = totalShareholders - paidShareholders;
     const paymentRate = ((paidShareholders / totalShareholders) * 100).toFixed(2);
@@ -147,6 +159,28 @@ export default function AdminPage() {
                     </div>
                 </div>
 
+                {/* Filter Section */}
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <Input
+                        placeholder="Filter by Email"
+                        value={searchEmail}
+                        onChange={(e) => setSearchEmail(e.target.value)}
+                    />
+                    <Input
+                        placeholder="Filter by Month (e.g., January)"
+                        value={searchMonth}
+                        onChange={(e) => setSearchMonth(e.target.value)}
+                    />
+                    <Input
+                        placeholder="Filter by Year (e.g., 2025)"
+                        value={searchYear}
+                        onChange={(e) => setSearchYear(e.target.value)}
+                    />
+                </div>
+                <div className="flex justify-end mt-2">
+                    <Button onClick={handleFilter}>Apply Filters</Button>
+                </div>
+
                 {/* Download Button */}
                 <div className="flex justify-end mb-4">
                     <Button variant="default" onClick={downloadCSV}>
@@ -155,34 +189,55 @@ export default function AdminPage() {
                 </div>
 
                 {/* Payment Table */}
-                <table className="w-full text-sm border-collapse">
-                    <thead>
-                    <tr className="bg-gray-100">
-                        <th className="border p-2">Shareholder Email</th>
-                        <th className="border p-2">Installment Month</th>
-                        <th className="border p-2">Installment Year</th>
-                        <th className="border p-2">Bank Name</th>
-                        <th className="border p-2">Amount</th>
-                        <th className="border p-2">Transaction Date</th>
-                        <th className="border p-2">Reference Number</th>
-                        <th className="border p-2">Submitted At</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {payments.map((payment) => (
-                        <tr key={payment.id} className="odd:bg-white even:bg-gray-50">
-                            <td className="border p-2">{payment.email}</td>
-                            <td className="border p-2">{payment.month}</td>
-                            <td className="border p-2">{payment.year}</td>
-                            <td className="border p-2">{payment.bank_name}</td>
-                            <td className="border p-2">{payment.amount} BDT</td>
-                            <td className="border p-2">{payment.transaction_date}</td>
-                            <td className="border p-2">{payment.reference_number}</td>
-                            <td className="border p-2">{new Date(payment.created_at).toLocaleString()}</td>
+                <div className="overflow-auto">
+                    <table className="w-full text-sm border-collapse">
+                        <thead>
+                        <tr className="bg-gray-100">
+                            <th className="border p-2">Shareholder Email</th>
+                            <th className="border p-2">Month</th>
+                            <th className="border p-2">Year</th>
+                            <th className="border p-2">Bank</th>
+                            <th className="border p-2">Amount</th>
+                            <th className="border p-2">Date</th>
+                            <th className="border p-2">Reference</th>
+                            <th className="border p-2">Proof</th>
+                            <th className="border p-2">Submitted At</th>
                         </tr>
-                    ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                        {filteredPayments.map((payment) => (
+                            <tr key={payment.id} className="odd:bg-white even:bg-gray-50">
+                                <td className="border p-2">{payment.email}</td>
+                                <td className="border p-2">{payment.month}</td>
+                                <td className="border p-2">{payment.year}</td>
+                                <td className="border p-2">{payment.bank_name}</td>
+                                <td className="border p-2">{payment.amount} BDT</td>
+                                <td className="border p-2">{payment.transaction_date}</td>
+                                <td className="border p-2">{payment.reference_number}</td>
+                                <td className="border p-2 text-center">
+                                    {payment.proof_url ? (
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <Button variant="link">View Proof</Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="w-[90vw] max-w-3xl h-[80vh] overflow-auto">
+                                                {payment.proof_url.endsWith(".pdf") ? (
+                                                    <iframe src={payment.proof_url} className="w-full h-full" />
+                                                ) : (
+                                                    <img src={payment.proof_url} alt="Proof" className="w-full h-auto" />
+                                                )}
+                                            </DialogContent>
+                                        </Dialog>
+                                    ) : (
+                                        <span className="text-gray-400 italic">No file</span>
+                                    )}
+                                </td>
+                                <td className="border p-2">{new Date(payment.created_at).toLocaleString()}</td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                </div>
 
                 {/* Back Button */}
                 <div className="flex justify-center mt-8">
