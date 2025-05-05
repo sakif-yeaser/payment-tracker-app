@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useRouter } from "next/navigation";
+
 
 const months = [
     "January", "February", "March", "April", "May", "June",
@@ -31,6 +33,7 @@ const shareholders = [
 const amounts = ["6500", "13000"];
 
 export default function PaymentForm() {
+    const router = useRouter();
     const [formData, setFormData] = useState({
         email: "",
         shareholderName: "",
@@ -117,6 +120,7 @@ export default function PaymentForm() {
                     referenceNumber: "",
                 });
                 setFile(null);
+                router.push("/dashboard");
             }
 
         } catch (error: unknown) {
