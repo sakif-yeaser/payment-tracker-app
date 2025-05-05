@@ -5,9 +5,14 @@ import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { useRouter } from "next/navigation";
-
 
 const months = [
     "January", "February", "March", "April", "May", "June",
@@ -30,15 +35,30 @@ const shareholders = [
     "Ashiqur Rahman Mahmud"
 ];
 
+const bankNames = [
+    "AB Bank PLC", "Bank Asia PLC", "BRAC Bank PLC", "City Bank PLC",
+    "Community Bank Bangladesh PLC", "Citizens Bank PLC", "Dhaka Bank PLC",
+    "Dutch-Bangla Bank PLC", "Eastern Bank PLC", "IFIC Bank PLC",
+    "Jamuna Bank Limited", "Meghna Bank PLC", "Mercantile Bank PLC",
+    "Midland Bank Limited", "Modhumoti Bank Limited", "Mutual Trust Bank PLC",
+    "NRB Bank Limited", "NRBC Bank PLC", "ONE Bank PLC", "Premier Bank PLC",
+    "Prime Bank PLC", "Pubali Bank PLC", "Southeast Bank Limited",
+    "Trust Bank PLC", "United Commercial Bank PLC", "Uttara Bank PLC",
+    "Agrani Bank PLC", "BASIC Bank Limited", "Bangladesh Development Bank",
+    "Janata Bank PLC", "Sonali Bank PLC", "Rupali Bank PLC"
+];
+
 const amounts = ["6500", "13000"];
 
 export default function PaymentForm() {
     const router = useRouter();
+    const currentYear = new Date().getFullYear().toString();
+
     const [formData, setFormData] = useState({
         email: "",
         shareholderName: "",
         month: "",
-        year: "",
+        year: currentYear,
         bankName: "",
         amount: "",
         transactionDate: "",
@@ -46,18 +66,21 @@ export default function PaymentForm() {
     });
 
     const [file, setFile] = useState<File | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value,
-        }));
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const uploadedFile = e.target.files?.[0];
         if (uploadedFile) {
+            const isValid = uploadedFile.type.startsWith("image/") || uploadedFile.type === "application/pdf";
+            if (!isValid) {
+                alert("Only image or PDF files are allowed.");
+                return;
+            }
             setFile(uploadedFile);
         }
     };
@@ -65,32 +88,36 @@ export default function PaymentForm() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (isSubmitting) return;
+        setIsSubmitting(true);
+
         let fileUrl = "";
 
-        if (file) {
-            const fileExt = file.name.split('.').pop();
-            const filePath = `proofs/${Date.now()}-${formData.referenceNumber}.${fileExt}`;
+        try {
+            if (file) {
+                const fileExt = file.name.split('.').pop();
+                const filePath = `proofs/${Date.now()}-${formData.referenceNumber}.${fileExt}`;
 
-            const {error: uploadError } = await supabase.storage
-                .from("payment-proofs")
-                .upload(filePath, file);
+                const { error: uploadError } = await supabase.storage
+                    .from("payment-proofs")
+                    .upload(filePath, file);
 
-            if (uploadError) {
-                console.error("File upload failed:", uploadError.message);
-                alert("Failed to upload file. Please try again.");
-                return;
+                if (uploadError) {
+                    console.error("File upload failed:", uploadError.message);
+                    alert("Failed to upload file. Please try again.");
+                    setIsSubmitting(false);
+                    return;
+                }
+
+                const { data: publicUrlData } = supabase
+                    .storage
+                    .from("payment-proofs")
+                    .getPublicUrl(filePath);
+
+                fileUrl = publicUrlData.publicUrl;
             }
 
-            const { data: publicUrlData } = supabase
-                .storage
-                .from("payment-proofs")
-                .getPublicUrl(filePath);
-
-            fileUrl = publicUrlData.publicUrl;
-        }
-
-        try {
-            const {error } = await supabase.from('payments').insert([
+            const { error } = await supabase.from("payments").insert([
                 {
                     email: formData.email,
                     shareholder_name: formData.shareholderName,
@@ -105,15 +132,15 @@ export default function PaymentForm() {
             ]);
 
             if (error) {
-                console.error('Error submitting payment:', error.message);
-                alert('Failed to submit. Please try again.');
+                console.error("Error submitting payment:", error.message);
+                alert("Failed to submit. Please try again.");
             } else {
-                alert('Payment submitted successfully!');
+                alert("Payment submitted successfully!");
                 setFormData({
                     email: "",
                     shareholderName: "",
                     month: "",
-                    year: "",
+                    year: currentYear,
                     bankName: "",
                     amount: "",
                     transactionDate: "",
@@ -122,11 +149,11 @@ export default function PaymentForm() {
                 setFile(null);
                 router.push("/dashboard");
             }
-
-        } catch (error: unknown) {
-            // @ts-expect-error ignore this error for now
-            console.error('Unexpected error:', error.message);
-            alert('Something went wrong!');
+        } catch (error: any) {
+            console.error("Unexpected error:", error.message);
+            alert("Something went wrong!");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -156,9 +183,9 @@ export default function PaymentForm() {
                             <SelectValue placeholder="Select Shareholder" />
                         </SelectTrigger>
                         <SelectContent>
-                            {shareholders.map((shareholder) => (
-                                <SelectItem key={shareholder} value={shareholder}>
-                                    {shareholder}
+                            {shareholders.map((name) => (
+                                <SelectItem key={name} value={name}>
+                                    {name}
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -192,7 +219,6 @@ export default function PaymentForm() {
                             name="year"
                             value={formData.year}
                             onChange={handleChange}
-                            placeholder="e.g. 2025"
                             required
                         />
                     </div>
@@ -200,13 +226,21 @@ export default function PaymentForm() {
 
                 <div>
                     <Label>Bank Name</Label>
-                    <Input
-                        type="text"
-                        name="bankName"
+                    <Select
                         value={formData.bankName}
-                        onChange={handleChange}
-                        required
-                    />
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, bankName: value }))}
+                    >
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select Bank" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {bankNames.map((bank) => (
+                                <SelectItem key={bank} value={bank}>
+                                    {bank}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
 
                 <div>
@@ -234,7 +268,8 @@ export default function PaymentForm() {
                         type="date"
                         name="transactionDate"
                         value={formData.transactionDate}
-                        onChange={handleChange}
+                        onChange={(e) => setFormData({ ...formData, transactionDate: e.target.value })}
+                        max={new Date().toISOString().split("T")[0]}
                         required
                     />
                 </div>
@@ -255,8 +290,8 @@ export default function PaymentForm() {
                     <Input type="file" accept="image/*,application/pdf" onChange={handleFileChange} required />
                 </div>
 
-                <Button type="submit" className="mt-4 w-full">
-                    Submit Payment
+                <Button type="submit" className="mt-4 w-full" disabled={isSubmitting}>
+                    {isSubmitting ? "Submitting..." : "Submit Payment"}
                 </Button>
             </form>
         </div>
