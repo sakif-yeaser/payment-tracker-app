@@ -10,7 +10,7 @@ const shareholders = [
     { name: "Shakil Ashraful Anam", email: "ashrafanam318@gmail.com" },
     { name: "Nurul Hoque Shohel", email: "mnhoque76@gmail.com" },
     { name: "MD Mazidul Hasan", email: "md.mazidulhasan1@gmail.com" },
-    { name: "Abdullah Umar Nasib", email: "shahena.akhter001@gmail.com" },
+    { name: "Shahena Akhter", email: "shahena.akhter001@gmail.com" },
     { name: "Syed Nazmus Shakib", email: "sakibsyed01@gmail.com" },
     { name: "Imran Hossain", email: "imranhossain21bd@gmail.com" },
     { name: "Fahim Hasnat", email: "md.fahimhasnat.bd@gmail.com" },
