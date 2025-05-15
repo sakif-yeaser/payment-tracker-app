@@ -216,6 +216,7 @@ export default function AdminPage() {
                                 <td className="border p-2">{payment.reference_number}</td>
                                 <td className="border p-2 text-center">
                                     {payment.proof_url ? (
+                                        <div className="flex flex-col items-center gap-1">
                                         <Dialog>
                                             <DialogTrigger asChild>
                                                 <Button variant="link">View Proof</Button>
@@ -228,6 +229,18 @@ export default function AdminPage() {
                                                 )}
                                             </DialogContent>
                                         </Dialog>
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={() => {
+                                                const extension = payment.proof_url?.split('.').pop()?.split('?')[0] || 'file';
+                                                const fileName = `${payment.shareholder_name}-${payment.month}.${extension}`;
+                                                saveAs(payment.proof_url!, fileName);
+                                            }}
+                                        >
+                                            Download
+                                        </Button>
+                                        </div>
                                     ) : (
                                         <span className="text-gray-400 italic">No file</span>
                                     )}
