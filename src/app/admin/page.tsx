@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { saveAs } from "file-saver";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import JSZip from "jszip";
+import { Download } from "lucide-react";
 
 interface Payment {
     id: string;
@@ -134,6 +136,47 @@ export default function AdminPage() {
         return <div>Loading...</div>;
     }
 
+    const handleDownloadAllProofs = async () => {
+        const zip = new JSZip();
+
+        const now = new Date();
+        const currentMonth = now.toLocaleString("default", { month: "long" });
+        const currentYear = now.getFullYear().toString();
+
+        const filesToDownload = payments.filter((p) =>
+            p.email.toLowerCase().includes(searchEmail.toLowerCase()) &&
+            p.month.toLowerCase().includes(searchMonth.toLowerCase()) &&
+            p.year.includes(searchYear)
+        );
+
+
+        if (filesToDownload.length === 0) {
+            alert("No proofs found for this month.");
+            return;
+        }
+
+        for (const payment of filesToDownload) {
+            if (!payment.proof_url) continue;
+
+            try {
+                const response = await fetch(payment.proof_url);
+                const blob = await response.blob();
+
+                const extension = payment.proof_url.split('.').pop()?.split('?')[0] || 'file';
+                const nameSafe = payment.shareholder_name.replace(/[^a-z0-9]/gi, '_');
+                const fileName = `${nameSafe}-${payment.month}.${extension}`;
+
+                zip.file(fileName, blob);
+            } catch (err) {
+                console.error(`Failed to fetch proof for ${payment.shareholder_name}`, err);
+            }
+        }
+
+        zip.generateAsync({ type: "blob" }).then((content) => {
+            saveAs(content, `Payment-Proofs-${currentMonth}-${currentYear}.zip`);
+        });
+    };
+
     return (
         <AuthGuard>
             <div className="max-w-7xl p-8 mx-auto mt-10 bg-white border rounded shadow space-y-8">
@@ -185,6 +228,16 @@ export default function AdminPage() {
                 <div className="flex justify-end mb-4">
                     <Button variant="default" onClick={downloadCSV}>
                         Download CSV
+                    </Button>
+                </div>
+
+                <div className="flex justify-end mt-2">
+                    <Button
+                        onClick={handleDownloadAllProofs}
+                        variant={"default"}
+                    >
+                        <Download className="w-4 h-4" />
+                        Download Proofs
                     </Button>
                 </div>
 
