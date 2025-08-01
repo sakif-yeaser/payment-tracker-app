@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 
 const shareholders = [
     { name: "Sakif Yeaser", email: "yeaser.sakif@gmail.com" },
-    { name: "Abdullah Umar Nasib", email: "umarnasib13@gmail.com" },
     { name: "Shakil Ashraful Anam", email: "ashrafanam318@gmail.com" },
     { name: "Nurul Hoque Shohel", email: "mnhoque76@gmail.com" },
     { name: "MD Mazidul Hasan", email: "md.mazidulhasan1@gmail.com" },
