@@ -50,7 +50,7 @@ const bankNames = [
     "Janata Bank PLC", "Sonali Bank PLC", "Rupali Bank PLC"
 ];
 
-const amounts = ["6500", "13000"];
+const amounts = ["7000", "14000", "21000"];
 
 export default function PaymentForm() {
     const router = useRouter();
