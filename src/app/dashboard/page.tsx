@@ -7,7 +7,6 @@ import { differenceInCalendarDays, isAfter, parseISO } from "date-fns";
 const shareholders = [
     "Shakil Ashraful Anam",
     "Sakif Yeaser",
-    "Abdullah Umar Nasib",
     "Nurul Hoque Shohel",
     "MD Mazidul Hasan",
     "Shahena Akther",

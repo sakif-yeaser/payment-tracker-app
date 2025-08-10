@@ -22,7 +22,6 @@ const months = [
 const shareholders = [
     "Shakil Ashraful Anam",
     "Sakif Yeaser",
-    "Abdullah Umar Nasib",
     "Nurul Hoque Shohel",
     "MD Mazidul Hasan",
     "Shahena Akther",
