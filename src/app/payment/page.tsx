@@ -49,8 +49,6 @@ const bankNames = [
     "Janata Bank PLC", "Sonali Bank PLC", "Rupali Bank PLC"
 ];
 
-const amounts = ["7000", "14000", "21000"];
-
 export default function PaymentForm() {
     const router = useRouter();
     const currentYear = new Date().getFullYear().toString();
@@ -247,21 +245,14 @@ export default function PaymentForm() {
 
                 <div>
                     <Label>Installment Amount</Label>
-                    <Select
+                    <Input
+                        type="number"
+                        name="amount"
+                        placeholder="Enter installment amount"
                         value={formData.amount}
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, amount: value }))}
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select Amount" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {amounts.map((amount) => (
-                                <SelectItem key={amount} value={amount}>
-                                    {amount}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                        onChange={handleChange}
+                        required
+                    />
                 </div>
 
                 <div>
